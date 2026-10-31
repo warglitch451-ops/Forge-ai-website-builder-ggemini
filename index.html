@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniSite AI - Agency & Entrepreneur AI Web Engine</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col overflow-hidden">
+
+  <!-- TOP BAR / HEADER -->
+  <header class="h-16 border-b border-slate-800 glass px-6 flex items-center justify-between shrink-0 z-20">
+    <div class="flex items-center gap-3">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-blue-500/30">
+        <i data-lucide="sparkles" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-lg leading-none bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+          OmniSite AI <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 ml-2">Enterprise v2.5</span>
+        </h1>
+        <p class="text-xs text-slate-400">Prompt to Live Website in 2 Minutes</p>
+      </div>
+    </div>
+
+    <!-- Mode Selector & API Controls -->
+    <div class="flex items-center gap-3">
+      <!-- Role/Mode Toggle Switch -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-1 flex text-xs">
+        <button id="mode-agency-btn" onclick="switchMode('agency')" class="px-3 py-1.5 rounded-md font-medium transition-all bg-blue-600 text-white shadow">
+          <i data-lucide="building-2" class="w-3.5 h-3.5 inline mr-1"></i> Agency Hub
+        </button>
+        <button id="mode-entrepreneur-btn" onclick="switchMode('entrepreneur')" class="px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition-all">
+          <i data-lucide="rocket" class="w-3.5 h-3.5 inline mr-1"></i> SaaS / Monetize
+        </button>
+      </div>
+
+      <!-- API Key Status Button -->
+      <button onclick="toggleApiKeyModal()" class="flex items-center gap-2 bg-slate-900 border border-slate-700 hover:border-slate-500 text-xs px-3 py-1.5 rounded-lg transition-all">
+        <i data-lucide="key" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span id="api-status-text" class="text-slate-300">Set API Key</span>
+      </button>
+
+      <!-- User Auth State -->
+      <div id="user-badge" class="flex items-center gap-2 bg-slate-900 border border-slate-800 text-xs px-3 py-1.5 rounded-lg text-emerald-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span id="user-role-text">Owner (Approved)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- LEFT SIDEBAR: GENERATOR & EDITORS -->
+    <div class="w-[420px] border-r border-slate-800 bg-slate-900/50 flex flex-col shrink-0 z-10">
+      
+      <!-- TAB NAVIGATION -->
+      <div class="flex border-b border-slate-800 bg-slate-950/60 text-xs font-semibold">
+        <button onclick="switchTab('create')" id="tab-create" class="flex-1 py-3 text-center text-blue-400 border-b-2 border-blue-500 flex items-center justify-center gap-1.5">
+          <i data-lucide="wand-2" class="w-4 h-4"></i> AI Prompt
+        </button>
+        <button onclick="switchTab('chat')" id="tab-chat" class="flex-1 py-3 text-center text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5">
+          <i data-lucide="message-square" class="w-4 h-4"></i> AI Chat Editor
+        </button>
+        <button onclick="switchTab('code')" id="tab-code" class="flex-1 py-3 text-center text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5">
+          <i data-lucide="code-2" class="w-4 h-4"></i> Manual Code
+        </button>
+      </div>
+
+      <!-- TAB 1: PROMPT ENGINE -->
+      <div id="panel-create" class="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Website Business / Niche Prompt</label>
+          <textarea id="prompt-input" rows="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-500 text-slate-200 placeholder-slate-500" placeholder="e.g., Create a high-converting luxury salon website with appointment booking, dark gold aesthetic, service grid, and customer reviews..."></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Design Style Preset</label>
+          <select id="style-preset" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+            <option value="modern-tech">SaaS Modern Dark (Cybersecurity / Dashboard)</option>
+            <option value="luxury-serif">Luxury Minimalist (Salon / Boutique / Spa)</option>
+            <option value="bold-gradient">Bold Startup (Agency / Web3 / Fintech)</option>
+            <option value="corporate-clean">Clean Corporate (Legal / Real Estate / Finance)</option>
+          </select>
+        </div>
+
+        <!-- GENERATE BUTTON -->
+        <button onclick="generateWebsite()" id="generate-btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Build Web Engine (2 Mins)</span>
+        </button>
+
+        <!-- FREEMIUM / ENTREPRENEUR ADS PROMPT BANNER -->
+        <div id="entrepreneur-ad-banner" class="hidden p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs space-y-2">
+          <div class="flex items-center justify-between text-amber-400 font-medium">
+            <span class="flex items-center gap-1.5"><i data-lucide="coins" class="w-4 h-4"></i> User Credits: <strong id="user-credits">1</strong></span>
+            <span class="text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded">Ad Monetization Active</span>
+          </div>
+          <p class="text-slate-400 text-[11px]">Out of credits? Watch a short 15-second sponsor ad to earn 1 free generation!</p>
+          <button onclick="openWatchAdModal()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1.5 rounded-lg text-xs transition">
+            Watch Ad for Free Credit
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: AI CHAT REFINEMENT EDITOR -->
+      <div id="panel-chat" class="hidden flex-1 flex flex-col h-full bg-slate-950/40">
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 custom-scrollbar text-xs">
+          <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl text-slate-300 max-w-[85%]">
+            👋 Hi! Type what you want to change on the website (e.g., "Change background to navy blue", "Add a pricing section", "Make headline bigger").
+          </div>
+        </div>
+        <div class="p-3 border-t border-slate-800 flex gap-2">
+          <input id="chat-input" type="text" placeholder="Tell AI what to edit..." class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500" onkeypress="if(event.key==='Enter') sendChatEdit()">
+          <button onclick="sendChatEdit()" class="bg-blue-600 hover:bg-blue-500 p-2 rounded-lg text-white">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 3: MANUAL CODE EDITOR -->
+      <div id="panel-code" class="hidden flex-1 flex flex-col h-full">
+        <textarea id="raw-code-editor" class="flex-1 bg-slate-950 p-4 font-mono text-xs text-emerald-400 border-none focus:outline-none resize-none custom-scrollbar" placeholder="HTML Output will appear here..."></textarea>
+        <div class="p-3 border-t border-slate-800 flex justify-end gap-2 bg-slate-900/80">
+          <button onclick="updatePreviewFromCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium flex items-center gap-1.5">
+            <i data-lucide="play" class="w-3.5 h-3.5"></i> Apply Changes
+          </button>
+        </div>
+      </div>
+
+      <!-- AGENCY RBAC ACCESS CONTROL PANEL -->
+      <div id="agency-team-panel" class="p-4 border-t border-slate-800 bg-slate-950/80">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-4 h-4 text-blue-400"></i> Agency Team Controls
+          </span>
+          <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20">RBAC Security</span>
+        </div>
+        
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between p-2 bg-slate-900 rounded-lg border border-slate-800">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[10px]">W1</div>
+              <div>
+                <p class="font-medium text-slate-200">worker_dev@agency.com</p>
+                <p class="text-[10px] text-amber-400" id="worker-status">Pending Owner Approval</p>
+              </div>
+            </div>
+            <button id="approve-btn" onclick="toggleWorkerApproval()" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] px-2.5 py-1 rounded-md transition">
+              Approve Access
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT MAIN PANEL: LIVE PREVIEW & WORKSPACE -->
+    <div class="flex-1 flex flex-col bg-slate-950 relative">
+
+      <!-- PREVIEW TOOLBAR -->
+      <div class="h-12 border-b border-slate-800 bg-slate-900/60 px-4 flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2 text-slate-400">
+          <i data-lucide="eye" class="w-4 h-4 text-slate-400"></i> Live Viewport Sandbox
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Device Toggle -->
+          <div class="bg-slate-950 border border-slate-800 rounded-lg p-1 flex">
+            <button onclick="setViewport('desktop')" class="p-1 text-blue-400 hover:text-white rounded"><i data-lucide="monitor" class="w-3.5 h-3.5"></i></button>
+            <button onclick="setViewport('tablet')" class="p-1 text-slate-400 hover:text-white rounded"><i data-lucide="tablet" class="w-3.5 h-3.5"></i></button>
+            <button onclick="setViewport('mobile')" class="p-1 text-slate-400 hover:text-white rounded"><i data-lucide="smartphone" class="w-3.5 h-3.5"></i></button>
+          </div>
+          <!-- Download & Export -->
+          <button onclick="exportCode()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export HTML
+          </button>
+        </div>
+      </div>
+
+      <!-- IFRAME CONTAINER -->
+      <div class="flex-1 bg-slate-900 p-4 flex items-center justify-center overflow-hidden">
+        <div id="viewport-frame" class="w-full h-full bg-white rounded-xl shadow-2xl transition-all duration-300 overflow-hidden relative">
+          <iframe id="preview-iframe" class="w-full h-full border-0"></iframe>
+
+          <!-- GENERATING LOADER OVERLAY -->
+          <div id="loader-overlay" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 z-30">
+            <div class="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+            <h3 class="text-lg font-bold text-white mb-1">AI Engine Building Website...</h3>
+            <p class="text-xs text-slate-400 max-w-sm">Crafting responsive Tailwind components, modern layout structure, and copy hierarchy in 2 minutes...</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- API KEY MODAL -->
+  <div id="api-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-slate-100 flex items-center gap-2">
+          <i data-lucide="key" class="w-5 h-5 text-amber-400"></i> Gemini API Key Storage
+        </h3>
+        <button onclick="toggleApiKeyModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="text-xs text-slate-400">
+        Enter your official Google Gemini API key. It will be securely saved in your browser (`localStorage`) to power website generation directly from your frontend.
+      </p>
+      <div>
+        <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="saveApiKey()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs px-5 py-2.5 rounded-xl transition">
+          Save & Lock Key
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WATCH AD MONETIZATION MODAL (ENTREPRENEUR MODE) -->
+  <div id="ad-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 text-center space-y-4 shadow-2xl">
+      <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto">
+        <i data-lucide="play-circle" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg text-white">Sponsored Video Ad</h3>
+      <p class="text-xs text-slate-400">Watch full 10-second sponsor ad to claim 1 Free Website Generation Credit.</p>
+      
+      <!-- Mock Ad Player -->
+      <div class="bg-slate-950 border border-slate-800 rounded-xl h-40 flex flex-col items-center justify-center relative overflow-hidden">
+        <div id="ad-timer" class="text-2xl font-bold text-amber-400">10s</div>
+        <p class="text-[10px] text-slate-500 mt-1">Sponsor: Enterprise Cloud Hosting</p>
+      </div>
+
+      <button id="claim-ad-reward-btn" disabled onclick="claimAdCredit()" class="w-full bg-slate-800 text-slate-500 font-bold py-2.5 rounded-xl text-xs transition cursor-not-allowed">
+        Watching Ad...
+      </button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // State Management
+    let currentMode = 'agency'; // 'agency' or 'entrepreneur'
+    let currentTab = 'create';
+    let workerApproved = false;
+    let credits = 1;
+    let generatedHTML = '';
+
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Load API Key on Boot
+    window.onload = function() {
+      const savedKey = localStorage.getItem('gemini_api_key');
+      if (savedKey) {
+        document.getElementById('api-key-input').value = savedKey;
+        document.getElementById('api-status-text').innerText = 'API Key Configured';
+        document.getElementById('api-status-text').classList.add('text-emerald-400');
+      }
+      setViewport('desktop');
+    };
+
+    // Toggle API Key Modal
+    function toggleApiKeyModal() {
+      const modal = document.getElementById('api-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('api-key-input').value.trim();
+      if (!key) return alert('Please enter a valid Gemini API Key');
+      localStorage.setItem('gemini_api_key', key);
+      document.getElementById('api-status-text').innerText = 'API Key Configured';
+      document.getElementById('api-status-text').classList.add('text-emerald-400');
+      toggleApiKeyModal();
+      alert('Gemini API Key securely stored!');
+    }
+
+    // Switch between Agency Hub and Entrepreneur SaaS Mode
+    function switchMode(mode) {
+      currentMode = mode;
+      const agencyBtn = document.getElementById('mode-agency-btn');
+      const entBtn = document.getElementById('mode-entrepreneur-btn');
+      const adBanner = document.getElementById('entrepreneur-ad-banner');
+      const teamPanel = document.getElementById('agency-team-panel');
+
+      if (mode === 'agency') {
+        agencyBtn.className = 'px-3 py-1.5 rounded-md font-medium transition-all bg-blue-600 text-white shadow';
+        entBtn.className = 'px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition-all';
+        adBanner.classList.add('hidden');
+        teamPanel.classList.remove('hidden');
+        document.getElementById('user-role-text').innerText = workerApproved ? 'Worker (Approved)' : 'Owner (Admin)';
+      } else {
+        entBtn.className = 'px-3 py-1.5 rounded-md font-medium transition-all bg-amber-600 text-white shadow';
+        agencyBtn.className = 'px-3 py-1.5 rounded-md font-medium text-slate-400 hover:text-white transition-all';
+        adBanner.classList.remove('hidden');
+        teamPanel.classList.add('hidden');
+        document.getElementById('user-role-text').innerText = 'Freemium Subscriber';
+      }
+    }
+
+    // Tab Switcher
+    function switchTab(tab) {
+      currentTab = tab;
+      ['create', 'chat', 'code'].forEach(t => {
+        document.getElementById(`panel-${t}`).classList.add('hidden');
+        const tabBtn = document.getElementById(`tab-${t}`);
+        tabBtn.className = 'flex-1 py-3 text-center text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5';
+      });
+
+      document.getElementById(`panel-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      activeBtn.className = 'flex-1 py-3 text-center text-blue-400 border-b-2 border-blue-500 font-semibold flex items-center justify-center gap-1.5';
+    }
+
+    // Agency RBAC Approval Handler
+    function toggleWorkerApproval() {
+      workerApproved = !workerApproved;
+      const btn = document.getElementById('approve-btn');
+      const status = document.getElementById('worker-status');
+
+      if (workerApproved) {
+        btn.innerText = 'Revoke Access';
+        btn.className = 'bg-rose-600 hover:bg-rose-500 text-white text-[11px] px-2.5 py-1 rounded-md transition';
+        status.innerText = 'Approved by Owner';
+        status.className = 'text-[10px] text-emerald-400';
+      } else {
+        btn.innerText = 'Approve Access';
+        btn.className = 'bg-blue-600 hover:bg-blue-500 text-white text-[11px] px-2.5 py-1 rounded-md transition';
+        status.innerText = 'Pending Owner Approval';
+        status.className = 'text-[10px] text-amber-400';
+      }
+    }
+
+    // Ad Watch Monetization System (Entrepreneur Mode)
+    function openWatchAdModal() {
+      document.getElementById('ad-modal').classList.remove('hidden');
+      let timeLeft = 10;
+      const timerDisplay = document.getElementById('ad-timer');
+      const rewardBtn = document.getElementById('claim-ad-reward-btn');
+      rewardBtn.disabled = true;
+      rewardBtn.className = 'w-full bg-slate-800 text-slate-500 font-bold py-2.5 rounded-xl text-xs cursor-not-allowed';
+
+      const interval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.innerText = `${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          timerDisplay.innerText = 'Ad Finished!';
+          rewardBtn.disabled = false;
+          rewardBtn.innerText = 'Claim +1 Free Credit';
+          rewardBtn.className = 'w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition shadow-lg shadow-amber-500/20';
+        }
+      }, 1000);
+    }
+
+    function claimAdCredit() {
+      credits++;
+      document.getElementById('user-credits').innerText = credits;
+      document.getElementById('ad-modal').classList.add('hidden');
+      alert('🎉 Reward Earned! 1 Website Generation Credit added.');
+    }
+
+    // MAIN AI WEBSITE GENERATION (GEMINI API)
+    async function generateWebsite() {
+      const apiKey = localStorage.getItem('gemini_api_key');
+      if (!apiKey) {
+        toggleApiKeyModal();
+        return alert('Please configure your Gemini API Key first!');
+      }
+
+      // Check RBAC in Agency Mode
+      if (currentMode === 'agency' && document.getElementById('user-role-text').innerText.includes('Worker') && !workerApproved) {
+        return alert('Access Blocked: Your worker account requires Owner Approval before using AI generation credits.');
+      }
+
+      // Check Credits in Entrepreneur Mode
+      if (currentMode === 'entrepreneur' && credits <= 0) {
+        return alert('Zero Credits Remaining! Watch a sponsor ad to get 1 free credit.');
+      }
+
+      const prompt = document.getElementById('prompt-input').value.trim();
+      const style = document.getElementById('style-preset').value;
+      if (!prompt) return alert('Please enter a website prompt!');
+
+      document.getElementById('loader-overlay').classList.remove('hidden');
+
+      const systemPrompt = `You are an elite web designer. Create a complete, responsive HTML landing page tailored for: "${prompt}".
+      Style direction: "${style}".
+      Requirements:
+      1. Include Tailwind CSS CDN script (<script src="https://cdn.tailwindcss.com"></script>) and Lucide Icons CDN (<script src="https://unpkg.com/lucide@latest"></script>).
+      2. Produce high-end visual design with header, modern hero section, feature cards, social proof/stats, pricing/service block, and footer.
+      3. OUTPUT ONLY VALID RAW HTML CODE. Do NOT wrap in markdown \`\`\`html tags. Start directly with <!DOCTYPE html>.`;
+
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: systemPrompt }] }]
+          })
+        });
+
+        const data = await response.json();
+        let html = data.candidates[0].content.parts[0].text;
+        
+        // Clean markdown backticks if returned
+        html = html.replace(/```html/g, '').replace(/```/g, '').trim();
+        generatedHTML = html;
+
+        // Render in Iframe and Code Editor
+        renderPreview(generatedHTML);
+        document.getElementById('raw-code-editor').value = generatedHTML;
+
+        // Deduct credit if in entrepreneur mode
+        if (currentMode === 'entrepreneur') {
+          credits--;
+          document.getElementById('user-credits').innerText = credits;
+        }
+
+      } catch (err) {
+        alert('Error generating website: ' + err.message);
+      } finally {
+        document.getElementById('loader-overlay').classList.add('hidden');
+      }
+    }
+
+    // AI CHAT REFINEMENT EDITING
+    async function sendChatEdit() {
+      const apiKey = localStorage.getItem('gemini_api_key');
+      const input = document.getElementById('chat-input');
+      const chatBox = document.getElementById('chat-messages');
+      const text = input.value.trim();
+
+      if (!text || !generatedHTML) return alert('Generate a site first or enter an edit command!');
+
+      // Append user msg
+      chatBox.innerHTML += `<div class="bg-blue-600 text-white p-3 rounded-xl max-w-[85%] ml-auto">${text}</div>`;
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      document.getElementById('loader-overlay').classList.remove('hidden');
+
+      const editPrompt = `Here is existing HTML code:\n${generatedHTML}\n\nTask: Update this HTML code according to this instruction: "${text}". Output ONLY raw HTML code without markdown.`;
+
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: editPrompt }] }] })
+        });
+
+        const data = await response.json();
+        let html = data.candidates[0].content.parts[0].text;
+        html = html.replace(/```html/g, '').replace(/```/g, '').trim();
+
+        generatedHTML = html;
+        renderPreview(generatedHTML);
+        document.getElementById('raw-code-editor').value = generatedHTML;
+
+        chatBox.innerHTML += `<div class="bg-slate-900 border border-slate-800 p-3 rounded-xl text-emerald-400 max-w-[85%]">✅ Edit applied successfully to preview!</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+      } catch (err) {
+        alert('Chat Edit Error: ' + err.message);
+      } finally {
+        document.getElementById('loader-overlay').classList.add('hidden');
+      }
+    }
+
+    // Render HTML in iframe
+    function renderPreview(html) {
+      const iframe = document.getElementById('preview-iframe');
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(html);
+      doc.close();
+    }
+
+    // Manual Code Update
+    function updatePreviewFromCode() {
+      generatedHTML = document.getElementById('raw-code-editor').value;
+      renderPreview(generatedHTML);
+    }
+
+    // Viewport Resizer
+    function setViewport(device) {
+      const frame = document.getElementById('viewport-frame');
+      if (device === 'desktop') frame.className = 'w-full h-full bg-white rounded-xl shadow-2xl transition-all duration-300';
+      if (device === 'tablet') frame.className = 'w-[768px] h-[95%] bg-white rounded-xl shadow-2xl transition-all duration-300';
+      if (device === 'mobile') frame.className = 'w-[375px] h-[90%] bg-white rounded-xl shadow-2xl transition-all duration-300';
+    }
+
+    // Export HTML File
+    function exportCode() {
+      if (!generatedHTML) return alert('No generated website to export!');
+      const blob = new Blob([generatedHTML], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ai-website-export.html';
+      a.click();
+    }
+  </script>
+</body>
+</html>
